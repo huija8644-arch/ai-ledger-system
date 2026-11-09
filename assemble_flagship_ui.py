@@ -27,22 +27,53 @@ if not t2_7_match:
     raise ValueError("Could not extract clean Tabs 2-7 from source HTML!")
 
 tabs_2_7 = t2_7_match.group(1).strip()
+tabs_2_7 = tabs_2_7.replace('<span style="font-size:22px;">🤖</span>', '<div style="width:28px; height:28px; border-radius:6px; background:var(--primary-light); color:var(--primary); display:flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2 2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><rect width="18" height="12" x="3" y="8" rx="2"/><path d="M9 13v2"/><path d="M15 13v2"/></svg></div>')
+tabs_2_7 = tabs_2_7.replace('⚡ 换个角度重新审阅', '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg> 重新审阅分析')
+
 # 将表格表头中的“规格”统一升级为更直观的“单位”
 tabs_2_7 = tabs_2_7.replace('<th>规格</th>', '<th>单位</th>')
+
+# 全面清理 Tab 1 与 Tab 2-7 中的历史 AI 塑料感 (Emoji & 浮夸宣传语)，升级为专业金融级文案与矢量微图标
+de_slop_replacements = [
+    ('<span>⚡ AI 经营异常诊断与补货催收建议</span>', '<span style="display:inline-flex; align-items:center; gap:6px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>经营异常诊断与决策建议</span>'),
+    ('🤖 唤醒大模型出具全局财务总监审计备忘录', '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg> 出具全局财务审计备忘录'),
+    ('<div class="panel-title">⚠️ 实时库存缺货与补货看板</div>', '<div class="panel-title" style="display:flex; align-items:center; gap:6px;"><span class="status-pill status-warning"><span class="status-dot"></span>库存预警</span> 实时库存缺货与补货看板</div>'),
+    ('<div class="panel-title">💰 客户应收欠款前 3 名</div>', '<div class="panel-title" style="display:flex; align-items:center; gap:6px;"><span class="status-pill status-danger"><span class="status-dot"></span>应收穿透</span> 客户应收账款 Top 3</div>'),
+    ('<span>📥 上传新表格 · AI 语义解析与实时入账工作台</span>', '<span style="display:inline-flex; align-items:center; gap:6px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>单据表格导入与业务推演工作台</span>'),
+    ('<div class="upload-icon">📂</div>', '<div class="upload-icon" style="color:var(--primary); display:flex; align-items:center; justify-content:center;"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg></div>'),
+    ('💡 快速载入测试场景表：', '<span style="font-size:12px; font-weight:600; color:var(--text-dim);">预设业务场景导入：</span>'),
+    ('✓ 确认写入数据库并刷新台账', '确认记账并同步更新台账'),
+    ('<span>🏢 商业业务实质与主体穿透</span>', '<span>业务实质与交易主体</span>'),
+    ('<span>⚠️ 往来款项与现金流占用预警</span>', '<span>往来款项与资金占用预警</span>'),
+    ('<span>🛡️ 单据合规与赠品防飞单内控 (赠品/散称损耗/高值锁控)</span>', '<span>单据合规与内控复核</span>'),
+    ('<span>📋 财务与库管可执行行动清单 (Action Items)</span>', '<span>财务与库管行动建议清单</span>'),
+    ('📦 库存变动推演 (Before', '库存变动推演 (Before'),
+    ('📈 客户应收变动：', '客户应收变动：'),
+    ('📉 供应商应付变动：', '供应商应付变动：'),
+    ('<span>📦 进销存实时库存汇总台账</span>', '<span>进销存实时库存台账</span>'),
+    ('<span>📈 客户应收账款汇总台账</span>', '<span>客户应收账款台账</span>'),
+    ('<span>📉 供应商应付账款汇总台账</span>', '<span>供应商应付账款台账</span>'),
+    ('<span>业务流水明细</span>', '<span>业务流水明细</span>'),
+]
+
+for old_s, new_s in de_slop_replacements:
+    tab1_enhanced = tab1_enhanced.replace(old_s, new_s)
+    tabs_2_7 = tabs_2_7.replace(old_s, new_s)
 
 # 先剥离可能已存在的排列选择器或清理批次按钮，确保多次构建 100% 幂等
 tabs_2_7 = re.sub(r'<div class="sort-control-wrap"[\s\S]*?</select>\s*</div>\s*', '', tabs_2_7)
 tabs_2_7 = re.sub(r'<button[^>]*id="btnClearRolledBack"[\s\S]*?</button>\s*', '', tabs_2_7)
 
-SORT_SELECT_HTML = """<div class="sort-control-wrap" style="display:inline-flex; align-items:center; gap:6px; background:var(--surface-subtle); border:1px solid var(--border); border-radius:9999px; padding:4px 12px;">
-              <span style="font-size:12px; font-weight:700; color:var(--text-muted); white-space:nowrap;">🔃 排列方式：</span>
-              <select class="table-sort-select" onchange="setSystemSortOrder(this.value)" style="border:none; background:transparent; font-size:12px; font-weight:700; color:var(--primary); cursor:pointer; outline:none; padding-right:4px;">
-                <option value="date_desc">按最新日期往下排 ↓ (默认)</option>
-                <option value="date_asc">按最早日期往下排 ↑</option>
-                <option value="stock_desc">按库存/数量：从多到少 ↓</option>
-                <option value="stock_asc">按库存/数量：从少到多 ↑</option>
-                <option value="amount_desc">按金额：从高到低 ↓</option>
-                <option value="amount_asc">按金额：从低到高 ↑</option>
+SORT_SELECT_HTML = """<div class="sort-control-wrap" style="display:inline-flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:4px 10px; box-shadow:var(--shadow-xs);">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-dim); flex-shrink:0;"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/></svg>
+              <span style="font-size:12px; font-weight:600; color:var(--text-muted); white-space:nowrap;">排序</span>
+              <select class="table-sort-select" onchange="setSystemSortOrder(this.value)" style="border:none; background:transparent; font-size:12px; font-weight:600; color:var(--text); cursor:pointer; outline:none; padding-right:2px;">
+                <option value="date_desc">按最新日期 ↓</option>
+                <option value="date_asc">按最早日期 ↑</option>
+                <option value="stock_desc">按库存数量 (从多到少) ↓</option>
+                <option value="stock_asc">按库存数量 (从少到多) ↑</option>
+                <option value="amount_desc">按金额大小 (从高到低) ↓</option>
+                <option value="amount_asc">按金额大小 (从低到高) ↑</option>
               </select>
             </div>"""
 
@@ -69,14 +100,16 @@ batches_header_new = f"""<!-- TAB 7: 导入批次与时光机 -->
     <div id="tab-batches" class="tab-pane" style="display:none;">
       <div class="panel">
         <div class="panel-header">
-          <div class="panel-title">
-            <span>⏳ 导入批次日志与一键撤销时光机</span>
-            <span style="font-size:12px; color:var(--text-dim); font-weight:normal;">(支持单批次撤回回滚、以及彻底物理删除错误或已撤销的占位批次)</span>
+          <div class="panel-title" style="display:flex; align-items:center; gap:8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary);"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+            <span style="font-weight:700;">导入批次审计与数据时光机</span>
+            <span style="font-size:12px; color:var(--text-dim); font-weight:normal;">(支持单批次撤回回滚、以及物理删除错误或已撤销的占位批次)</span>
           </div>
           <div class="panel-actions" style="display:flex; align-items:center; gap:8px;">
             {SORT_SELECT_HTML}
-            <button class="btn btn-sm btn-danger" id="btnClearRolledBack" onclick="clearRolledBackBatches()" title="一键彻底删除所有已撤销回滚或 0 条记录的占位批次">
-              🧹 清理已撤销/空批次
+            <button class="btn btn-sm btn-outline-danger" id="btnClearRolledBack" onclick="clearRolledBackBatches()" style="display:inline-flex; align-items:center; gap:5px;" title="一键彻底删除所有已撤销回滚或 0 条记录的占位批次">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              清理无效批次
             </button>
           </div>
         </div>"""
@@ -92,48 +125,49 @@ TAB_8_CHAT_HTML = """<!-- TAB 8: AI 财务助理对话 -->
     <div id="tab-chat" class="tab-pane" style="display:none;">
       <div class="panel">
         <div class="panel-header">
-          <div class="panel-title">
-            <span>💬 AI 财务总监 · 多模态单据识别与协同记账中心</span>
+          <div class="panel-title" style="display:flex; align-items:center; gap:8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary);"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span style="font-weight:700;">AI 财务总监 · 智能单据识别与协同中心</span>
           </div>
           <div class="panel-actions" style="display:flex; align-items:center; gap:10px;">
-            <span style="font-size:12px; color:var(--text-dim);">支持上传 Excel/CSV 表格、单据照片/扫描件（可拖拽或 Ctrl+V 粘贴截图），智能识别后确认入账</span>
+            <span style="font-size:12px; color:var(--text-dim);">支持 Excel/CSV 表格与单据照片（可拖拽或直接粘贴截图），核对确认后原子入账</span>
             <button class="btn btn-sm btn-primary" onclick="document.getElementById('chatFileInput').click()" style="display:inline-flex; align-items:center; gap:5px;">
-              📎 上传表格 / 单据图片
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              上传表格 / 单据图片
             </button>
           </div>
         </div>
         <div class="chat-container" id="mainChatDropZone">
           <!-- Quick Prompt Pills -->
           <div style="padding:10px 16px; background:var(--surface-subtle); border-bottom:1px solid var(--border); display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-            <span style="font-size:12px; color:var(--text-dim); font-weight:700;">⚡ 快捷操作与多模态体验：</span>
-            <button class="btn btn-sm" style="background:var(--primary-light); color:var(--primary); border-color:var(--primary-border); font-weight:700;" onclick="document.getElementById('chatFileInput').click()">📸 上传采购/销售单据图片或表格</button>
-            <button class="btn btn-sm btn-teal" onclick="sendChatMessage('帮我分析下目前欠款最多的客户，并为他生成一封专业的催款对账函')">💰 催款对账函生成</button>
-            <button class="btn btn-sm btn-teal" onclick="sendChatMessage('评估当前供应商应付款总额与最大的两家供货商，给出30天现金流风险预警')">📉 应付款与现金流预警</button>
-            <button class="btn btn-sm btn-teal" onclick="sendChatMessage('帮我盘点全库跌破安全水位的商品，并给出紧急采购补货建议')">⚠️ 库存缺货与补货方案</button>
-            <button class="btn btn-sm btn-teal" onclick="sendChatMessage('向西藏腾格商贸采购雪花啤酒50件，单价65元')">📝 自然语言记账测试</button>
+            <span style="font-size:11.5px; color:var(--text-dim); font-weight:600;">快捷指令：</span>
+            <button class="btn btn-xs btn-outline-primary" onclick="document.getElementById('chatFileInput').click()">上传单据图片/表格</button>
+            <button class="btn btn-xs btn-outline-secondary" onclick="sendChatMessage('帮我分析下目前欠款最多的客户，并为他生成一封专业的催款对账函')">生成催款对账函</button>
+            <button class="btn btn-xs btn-outline-secondary" onclick="sendChatMessage('评估当前供应商应付款总额与最大的两家供货商，给出30天现金流风险预警')">应付款与现金流预警</button>
+            <button class="btn btn-xs btn-outline-secondary" onclick="sendChatMessage('帮我盘点全库跌破安全水位的商品，并给出紧急采购补货建议')">缺货盘点与补货建议</button>
+            <button class="btn btn-xs btn-outline-secondary" onclick="sendChatMessage('向西藏腾格商贸采购雪花啤酒50件，单价65元')">记账指令示例</button>
           </div>
           <div class="chat-messages" id="chatMessages">
             <div class="chat-bubble bot">
-              <div>您好！我是接入了多模态视觉与千亿大模型的 <strong>AI 财务总监兼智能助理</strong>。
-我已经完全掌握了贵司当前的实时库存资产、客商往来与销售毛利数据。
+              <div>您好，我是 <strong>AI 财务总监与协同助手</strong>。系统已全量同步当前库存资产、往来账款与流水明细。
 
-您可以随时向我发起以下协同操作：
-• <strong>📎 上传表格或单据图片识别入账</strong>：点击下方「📎 上传表格/单据图」按钮（或直接将 Excel 表格、纸质单据照片/扫描件拖拽、<code>Ctrl+V</code> 粘贴到本窗口），我将自动提取品名、数量、单位、单价与金额，并在您<strong>确认后一键录入更新全系统数据</strong>。
-• <strong>⚙️ 自然语言协同指令落盘</strong>：如「将零食、坚果、水果类的安全库存统一设为10」或「向西藏腾格商贸进货雪花啤酒50件单价65元」。
-• <strong>📊 财务经营诊断与催收函</strong>：「分析目前最大的两家供应商应付账款」或「给欠款最多的客户生成对账催款单」。</div>
-              <div style="margin-top:8px; padding-top:6px; border-top:1px solid rgba(0,0,0,0.06); font-size:11px; display:flex; align-items:center; justify-content:space-between; color:#0f766e; font-weight:600;">
-                <span>🟢 多模态视觉 OCR + 大模型全脑驱动 (实时数据库 Grounding)</span>
-                <span style="font-size:10px; opacity:0.8;">支持 Excel / CSV / 单据照片上传</span>
+您可以随时执行以下操作：
+1. <strong>上传单据图片或表格入账</strong>：点击下方「上传表格/单据图」或直接在窗口内 <code>Ctrl+V</code> 粘贴截图、拖拽文件，系统将智能提取品名、数量、单位、单价与往来单位，并在您<strong>核对确认后正式录入</strong>。
+2. <strong>自然语言记账指令</strong>：如「将坚果类商品安全库存统一设为10」或「向西藏腾格商贸进货雪花啤酒50件单价65元」。
+3. <strong>财务经营诊断</strong>：「分析当前应付欠款最高的两家供应商」或「为欠款最多客户生成对账单」。</div>
+              <div style="margin-top:8px; padding-top:6px; border-top:1px solid rgba(0,0,0,0.06); font-size:11px; display:flex; align-items:center; justify-content:space-between; color:var(--text-dim);">
+                <span class="status-pill status-success" style="font-size:11px;"><span class="status-dot"></span>多模态识别与数据库实时关联</span>
+                <span style="font-size:10px;">支持 Excel / CSV / 单据照片</span>
               </div>
             </div>
           </div>
           <div class="chat-input-bar" style="display:flex; gap:8px; align-items:center;">
             <input type="file" id="chatFileInput" accept=".xlsx,.xls,.csv,.png,.jpg,.jpeg,.webp,.bmp" multiple style="display:none;" onchange="handleChatFileUpload(this.files, 'main'); this.value='';">
-            <button type="button" class="btn" onclick="document.getElementById('chatFileInput').click()" title="上传 Excel/CSV 表格或单据扫描/拍摄图片（支持拖拽文件或直接 Ctrl+V 粘贴截图）" style="display:inline-flex; align-items:center; gap:6px; padding:0 14px; height:40px; font-weight:700; color:var(--primary); border-color:var(--primary-border); background:var(--primary-light); flex-shrink:0;">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-              上传表格/单据图
+            <button type="button" class="btn" onclick="document.getElementById('chatFileInput').click()" title="上传表格或单据照片（支持拖拽或直接粘贴截图）" style="display:inline-flex; align-items:center; gap:6px; padding:0 14px; height:40px; font-weight:600; color:var(--primary); border-color:var(--border); background:var(--surface); flex-shrink:0;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              上传表格/单据
             </button>
-            <input type="text" id="chatInput" class="form-input" placeholder="输入记账指令、财务问题，或点击左侧上传表格/单据图片（支持直接粘贴截图）..." onkeydown="if(event.key==='Enter') sendChatMessage()">
+            <input type="text" id="chatInput" class="form-input" placeholder="输入记账指令、财务问题，或点击左侧上传单据图片/表格（支持直接粘贴截图）..." onkeydown="if(event.key==='Enter') sendChatMessage()">
             <button class="btn btn-primary" onclick="sendChatMessage()" style="height:40px; padding:0 20px; flex-shrink:0;">发送</button>
           </div>
         </div>
@@ -147,6 +181,12 @@ tabs_2_8 = tabs_2_7 + "\n\n    " + TAB_8_CHAT_HTML
 clean_modals_match = re.search(r'(<!-- ================= MODALS ================= -->[\s\S]*?<div class="modal-overlay" id="aiSettingsModal">[\s\S]*?saveAiSettings\(\)">保存配置并连接</button>\s*</div>\s*</div>\s*</div>)', src_html)
 if clean_modals_match:
     modals_html = clean_modals_match.group(1) + "\n</div>"
+    # De-slop: 清理原生 Modals 中的 Emoji
+    modals_html = modals_html.replace('🛠️ 账套初始化与重置', '账套初始化与重置')
+    modals_html = modals_html.replace('⚙️ 大模型 API 接口配置与在线诊断', '大模型 API 接口配置与在线诊断')
+    modals_html = modals_html.replace('💡 <strong>配置提示</strong>：', '<strong>配置提示</strong>：')
+    modals_html = modals_html.replace('🔌 测试 API 连接', '测试 API 连接')
+    modals_html = modals_html.replace('💳 同时登记/调整已付金额', '登记/调整已付金额')
 else:
     raise ValueError("Could not find clean base modals in source HTML!")
 
@@ -187,7 +227,7 @@ if 'commonUnitList_global' not in modals_html:
 sup_modal_replacement = """
       <div style="background:var(--surface-subtle); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; margin-top:10px;">
         <div style="font-weight:700; font-size:12.5px; color:var(--text); margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;">
-          <span style="display:flex; align-items:center; gap:6px;">💳 同时登记/调整已付金额 (选填，自动同步流水)</span>
+          <span style="display:flex; align-items:center; gap:6px;">登记/调整已付金额 (选填，自动同步流水)</span>
           <span style="font-size:11.5px; color:var(--text-muted);">累计已付: <strong id="supFormCurrentPaid" style="color:var(--green);">¥0.00</strong></span>
         </div>
         <div class="form-grid-2">
@@ -214,6 +254,48 @@ if 'supFormAddPayment' not in modals_html:
 with open(os.path.join(BASE_DIR, 'original_main_script.js'), 'r', encoding='utf-8') as f_orig:
     main_js = f_orig.read()
 
+# 对 main_js 进行 De-slop 净化
+main_js_de_slop = [
+    ("mode.includes('🟢')", "Boolean(mode && !mode.includes('本地'))"),
+    ("✓ ${data.result.mode || '大模型'}已成功解析您的指令，并自动在工作台生成了入账推演卡片，请核对后确认是否正式写入数据库！", "${data.result.mode || '大模型'}已成功解析记账指令，并在工作台生成入账推演卡片，请核对确认。"),
+    ("✓ AI 实时直通入账成功！", "AI 直通入账成功！"),
+    ("✓ 入账成功！", "入账成功！"),
+    ("✓ 批次「", "批次「"),
+    ("✓ AI 协同指令已执行并持久化落盘！", "AI 协同指令已执行并持久化落盘"),
+    ("✓ 大模型已成功解析您的指令", "已成功解析记账指令"),
+    ("✓ <strong>大模型握手成功！</strong>", "<strong>接口连接成功！</strong>"),
+    ("✕ <strong>接口探测未通过：</strong>", "<strong>接口探测未通过：</strong>"),
+    ("✕ <strong>请求失败：</strong>", "<strong>请求失败：</strong>"),
+    ("✓ 大模型接口配置已保存并成功连通", "大模型接口配置已保存并成功连通"),
+    ("⚠️ 配置已保存，但在探测连通时提示：", "配置已保存，但在探测连通时提示："),
+    ("✓ AI 接口配置已保存！", "AI 接口配置已保存！"),
+    ("⚠️ 缺货预警", "缺货预警"),
+
+    ("⚠️ 当前库存跌破安全红线，需补货", "当前库存跌破安全红线，需尽快补货"),
+    ("✓ 全部 SKU 库存充足", "全库 SKU 库存状态健康"),
+    ("⚙️ AI 已连接", "AI 引擎: 已连接"),
+    ("⚙️ AI 配置 (当前使用本地引擎)", "AI 配置 (本地引擎)"),
+    ("⚡ AI 表格多模态语义清洗", "单据数据结构化解析中"),
+    ("🟢 大模型已全脑深度介入", "大模型多模态解析就绪"),
+    ("⚠️ 模型调用说明：", "模型调用说明："),
+    ("⚠️ 重复单据拦截提示：", "单号重复提示："),
+    ("📦 通用商品", "通用商品"),
+    ("✓ 账套初始化操作已成功完成！", "账套初始化操作已成功完成！"),
+    ("🧠 AI 财务总监正在调用大模型全脑思考中...", "AI 正在实时分析账套数据与业务实质..."),
+    ("✓ 大模型已成功解析您的指令", "已成功解析记账指令"),
+    ("⚡ 正在向大模型接口发送 Ping 握手探测...", "正在向大模型接口发送握手探测..."),
+    ("✓ <strong>大模型握手成功！</strong>", "<strong>接口连接成功！</strong>"),
+    ("🤖 AI 财务总监正在实时穿透", "正在生成财务审计与业务诊断报告"),
+    ("📑 ", ""),
+    ("📈 应收账款审计", "应收账款审计"),
+    ("📉 应付账款审计", "应付账款审计"),
+    ("📦 库存与缺货审计", "库存与缺货审计"),
+    ("📋 财务总监行动指导：", "财务总监行动指导："),
+]
+for o_str, n_str in main_js_de_slop:
+    main_js = main_js.replace(o_str, n_str)
+
+
 # 供应商付款与撤回中心专属模态框
 PAYMENT_MODAL_HTML = """
   <!-- ================= 供应商付款登记/修改模态框 ================= -->
@@ -237,7 +319,7 @@ PAYMENT_MODAL_HTML = """
 
         <!-- 编辑模式提示横条 -->
         <div id="supPayEditBanner" style="display:none; background:var(--amber-light); border:1px solid var(--amber-border); color:var(--amber); padding:8px 12px; border-radius:8px; margin-bottom:14px; font-size:12px; font-weight:700; align-items:center; justify-content:space-between;">
-          <span>✏️ 正在修改付款单据 <span id="supPayEditingIdText"></span></span>
+          <span>正在修改付款单据 <span id="supPayEditingIdText"></span></span>
           <button type="button" class="btn btn-sm" style="padding:2px 8px; font-size:11px;" onclick="resetSupPayFormToNew()">取消修改 (切回新增)</button>
         </div>
 
@@ -279,7 +361,7 @@ PAYMENT_MODAL_HTML = """
         <!-- 历史付款明细（支持就地修改与撤回） -->
         <div id="supPayHistorySection" style="border-top:1px dashed var(--border); padding-top:12px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <span style="font-size:12.5px; font-weight:700; color:var(--text);">📜 该供应商已付记录 (<span id="supPayHistoryCount">0</span> 笔)</span>
+            <span style="font-size:12.5px; font-weight:700; color:var(--text);">该供应商已付记录 (<span id="supPayHistoryCount">0</span> 笔)</span>
             <span style="font-size:11px; color:var(--text-dim);">若录入有误，可点击【修改】更正或【撤回】删除</span>
           </div>
           <div id="supPayHistoryList" style="max-height:150px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; font-size:12px; background:var(--surface);"></div>
@@ -403,12 +485,29 @@ ADDITIONAL_JS = """
   let currentPaymentSupplierBalance = 0;
 
   function showFloatToast(msg, type = 'green') {
-    const bg = type === 'amber' ? 'var(--amber, #f59e0b)' : (type === 'red' ? 'var(--red, #ef4444)' : 'var(--green, #10b981)');
+    const isRed = type === 'red' || type === 'danger';
+    const isAmber = type === 'amber' || type === 'warning';
+    const toastClass = isRed ? 'toast-red' : (isAmber ? 'toast-amber' : 'toast-success');
+    
+    const iconSvg = isRed 
+      ? '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+      : (isAmber 
+        ? '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+        : '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>');
+
+    // 剔除旧消息中残留的纯文本 Emoji
+    const cleanMsg = (msg || '').replace(/[✓✔⚠️❌🚫🗑️✨🧹🔃]/g, '').trim();
+
     const alertNotice = document.createElement('div');
-    alertNotice.style.cssText = `position:fixed; top:24px; right:24px; z-index:9999; background:${bg}; color:#fff; padding:12px 20px; border-radius:8px; font-weight:700; box-shadow:0 6px 16px rgba(0,0,0,0.18); animation:modal-fade-in 0.2s ease;`;
-    alertNotice.textContent = msg;
+    alertNotice.className = `toast-notice ${toastClass}`;
+    alertNotice.innerHTML = `${iconSvg}<span>${cleanMsg}</span>`;
     document.body.appendChild(alertNotice);
-    setTimeout(() => alertNotice.remove(), 3200);
+    setTimeout(() => {
+      alertNotice.style.opacity = '0';
+      alertNotice.style.transform = 'translateY(-6px)';
+      alertNotice.style.transition = 'all 0.2s ease';
+      setTimeout(() => alertNotice.remove(), 220);
+    }, 3200);
   }
 
   function openSupplierPaymentModal(supId, supName, apBalance, editPaymentItem) {
@@ -429,13 +528,13 @@ ADDITIONAL_JS = """
 
     if (editPaymentItem) {
       document.getElementById('supPayPaymentId').value = editPaymentItem.id || '';
-      document.getElementById('supPayModalTitle').textContent = '✏️ 修改供应商付款单 (单号 #' + editPaymentItem.id + ')';
+      document.getElementById('supPayModalTitle').textContent = '修改供应商付款单 (单号 #' + editPaymentItem.id + ')';
       document.getElementById('supPayModalSubtitle').textContent = '修改已付金额或付款时间，保存后账套将实时全量重算';
       document.getElementById('supPayAmount').value = editPaymentItem.amount || '';
       document.getElementById('supPayDate').value = editPaymentItem.date || new Date().toISOString().split('T')[0];
       document.getElementById('supPayPayer').value = editPaymentItem.payer || '财务出纳';
       document.getElementById('supPayRemark').value = (editPaymentItem.phone || '').replace(/^备注:/, '');
-      document.getElementById('supPaySubmitBtn').textContent = '💾 保存修改并实时同步';
+      document.getElementById('supPaySubmitBtn').textContent = '保存修改并实时同步';
       document.getElementById('supPayEditBanner').style.display = 'flex';
       document.getElementById('supPayEditingIdText').textContent = '#' + editPaymentItem.id;
     } else {
@@ -469,13 +568,13 @@ ADDITIONAL_JS = """
     const p = (CURRENT_STATE.supplier_payments || []).find(x => x.id === paymentId);
     if (!p) return alert('未找到该付款单据');
     document.getElementById('supPayPaymentId').value = p.id;
-    document.getElementById('supPayModalTitle').textContent = '✏️ 修改供应商付款单 (单号 #' + p.id + ')';
+    document.getElementById('supPayModalTitle').textContent = '修改供应商付款单 (单号 #' + p.id + ')';
     document.getElementById('supPayModalSubtitle').textContent = '修改已付金额或付款时间，保存后账套将实时全量重算';
     document.getElementById('supPayAmount').value = p.amount;
     document.getElementById('supPayDate').value = p.date;
     document.getElementById('supPayPayer').value = p.payer || '财务出纳';
     document.getElementById('supPayRemark').value = (p.phone || '').replace(/^备注:/, '');
-    document.getElementById('supPaySubmitBtn').textContent = '💾 保存修改并实时同步';
+    document.getElementById('supPaySubmitBtn').textContent = '保存修改并实时同步';
     document.getElementById('supPayEditBanner').style.display = 'flex';
     document.getElementById('supPayEditingIdText').textContent = '#' + p.id;
     renderModalPaymentHistory(p.supplier_name);
@@ -503,7 +602,7 @@ ADDITIONAL_JS = """
           ${p.phone ? `<span style="color:var(--text-dim); margin-left:6px; font-size:11px;">${p.phone}</span>` : ''}
         </div>
         <div style="display:flex; gap:4px;">
-          <button type="button" class="btn btn-sm" style="padding:2px 7px; font-size:11px;" onclick="loadPaymentForEdit(${p.id})">✏️ 修改</button>
+          <button type="button" class="btn btn-sm" style="padding:2px 7px; font-size:11px;" onclick="loadPaymentForEdit(${p.id})">修改</button>
           <button type="button" class="btn btn-sm btn-action-danger" style="padding:2px 7px; font-size:11px;" onclick="deleteSupplierPaymentRecord(${p.id}, ${p.amount}, '${safeSupName}')">↩️ 撤回</button>
         </div>
       </div>
@@ -554,11 +653,11 @@ ADDITIONAL_JS = """
       renderSupplierPaymentHistory(sname);
     }
 
-    showFloatToast(paymentId ? `✓ 成功修改【${sname}】付款单据为 ¥${fmtNum(amount)}，账套已实时全量更新！` : `✓ 成功为【${sname}】录入已付款 ¥${fmtNum(amount)}，账套与图表已实时全量同步！`);
+    showFloatToast(paymentId ? `成功修改【${sname}】付款单据为 ¥${fmtNum(amount)}，账套已实时全量更新` : `成功为【${sname}】录入已付款 ¥${fmtNum(amount)}，账套与图表已实时全量同步！`);
   }
 
   async function deleteSupplierPaymentRecord(paymentId, amount, supplierName) {
-    if (!confirm(`⚠️ 确定要【撤回/作废】这笔已付账款吗？
+    if (!confirm(`确定要撤回作废这笔已付账款吗？
 
 供应商：${supplierName}
 撤回金额：¥${fmtNum(amount)}
@@ -592,7 +691,7 @@ ADDITIONAL_JS = """
 
   function renderSupplierPaymentHistory(supplierName) {
     const sup = (CURRENT_STATE.ap_ledger || []).find(s => s.supplier_name === supplierName) || {};
-    document.getElementById('histModalTitle').textContent = `📋【${supplierName}】已付明细与撤回中心`;
+    document.getElementById('histModalTitle').textContent = `【${supplierName}】已付明细与撤回中心`;
     document.getElementById('histSupName').textContent = supplierName;
     document.getElementById('histPaidTotal').textContent = fmtMoney(sup.paid_amount || 0);
     document.getElementById('histBalanceTotal').textContent = fmtMoney(sup.ap_balance || 0);
@@ -613,7 +712,7 @@ ADDITIONAL_JS = """
         <td>${p.payer || '-'}</td>
         <td style="color:var(--text-muted); font-size:11.5px;">${p.phone ? p.phone.replace(/^备注:/, '') : '-'}</td>
         <td style="text-align:center; white-space:nowrap;">
-          <button class="btn btn-sm" style="padding:2px 8px; font-size:11px;" onclick="editPaymentFromHistory(${p.id})">✏️ 修改</button>
+          <button class="btn btn-sm" style="padding:2px 8px; font-size:11px;" onclick="editPaymentFromHistory(${p.id})">修改</button>
           <button class="btn btn-sm btn-action-danger" style="padding:2px 8px; font-size:11px; margin-left:4px;" onclick="deleteSupplierPaymentRecord(${p.id}, ${p.amount}, '${safeSupName}')">↩️ 撤回</button>
         </td>
       </tr>
@@ -671,7 +770,7 @@ ADDITIONAL_JS = """
       'amount_asc': '按金额从低到高排列 ↑'
     };
     if (typeof showFloatToast === 'function') {
-      showFloatToast(`🔃 已切换表单排列方式：${labelMap[window.CURRENT_SORT_MODE] || mode}`, 'green');
+      showFloatToast(`已切换表单排列方式：${labelMap[window.CURRENT_SORT_MODE] || mode}`, 'green');
     }
   };
 
@@ -753,7 +852,7 @@ ADDITIONAL_JS = """
       if (x.is_low_stock) tr.className = 'low-stock';
       const safeProdName = (x.product_name || '').replace(/'/g, "\\\\'");
       const dateHint = (x.latest_date && x.latest_date !== '0000-00-00')
-        ? `<div style="font-size:10.5px; color:var(--text-dim); font-weight:500; margin-top:2px;">🕒 最新日期: ${x.latest_date}</div>`
+        ? `<div style="margin-top:2px;"><span class="cell-sub-date">${x.latest_date}</span></div>`
         : '';
       tr.innerHTML = `
         <td><strong>${x.product_name}</strong>${dateHint}</td>
@@ -768,7 +867,7 @@ ADDITIONAL_JS = """
         <td class="num" style="font-weight:700; ${x.is_low_stock ? 'color:var(--red);' : ''}">${x.stock_qty}</td>
         <td class="num" style="font-weight:600;">${fmtMoney(x.stock_amount)}</td>
         <td class="num">${x.safety_stock}</td>
-        <td>${x.is_low_stock ? '<span class="tag tag-red">⚠️ 缺货预警</span>' : '<span class="tag tag-green">正常</span>'}</td>
+        <td>${x.is_low_stock ? '<span class="status-pill status-danger"><span class="status-dot"></span>缺货预警</span>' : '<span class="status-pill status-success"><span class="status-dot"></span>充足</span>'}</td>
         <td>
           <button class="btn-action" onclick="openProductModal(${x.id})">编辑</button>
           <button class="btn-action btn-action-danger" onclick="deleteProduct(${x.id}, '${safeProdName}')">删除</button>
@@ -792,7 +891,7 @@ ADDITIONAL_JS = """
       const tr = document.createElement('tr');
       const safeCustName = (x.customer_name || '').replace(/'/g, "\\\\'");
       const dateHint = (x.latest_date && x.latest_date !== '0000-00-00')
-        ? `<div style="font-size:10.5px; color:var(--text-dim); font-weight:500; margin-top:2px;">🕒 最新日期: ${x.latest_date}</div>`
+        ? `<div style="margin-top:2px;"><span class="cell-sub-date">${x.latest_date}</span></div>`
         : '';
       tr.innerHTML = `
         <td><span class="tag ${x.rank === 1 ? 'tag-red' : (x.rank === 2 ? 'tag-amber' : 'tag-blue')}">第 ${x.rank} 名</span></td>
@@ -814,7 +913,7 @@ ADDITIONAL_JS = """
     });
   };
 
-  // 重写 renderAP 以支持多维排序，并在表格中显示【💳 登记付款】与【↩️ 记录/撤回】按钮及可点击的已付金额
+  // 重写 renderAP 以支持多维排序、付款明细与登记付款联动
   window.renderAP = function() {
     const tbody = document.querySelector('#apTable tbody');
     if (!tbody) return;
@@ -829,7 +928,7 @@ ADDITIONAL_JS = """
       const tr = document.createElement('tr');
       const safeName = (x.supplier_name || '').replace(/'/g, "\'");
       const dateHint = (x.latest_date && x.latest_date !== '0000-00-00')
-        ? `<div style="font-size:10.5px; color:var(--text-dim); font-weight:500; margin-top:2px;">🕒 最新日期: ${x.latest_date}</div>`
+        ? `<div style="margin-top:2px;"><span class="cell-sub-date">${x.latest_date}</span></div>`
         : '';
       tr.innerHTML = `
         <td><span class="tag ${x.rank === 1 ? 'tag-amber' : 'tag-blue'}">第 ${x.rank} 名</span></td>
@@ -840,7 +939,7 @@ ADDITIONAL_JS = """
         <td class="num">
           ${x.paid_amount > 0 ? `
             <button type="button" class="badge-paid-clickable" onclick="openSupplierPaymentHistoryModal('${safeName}')" title="已付 -¥${fmtMoney(x.paid_amount)}，点击查看明细、修改金额或撤回单据">
-              -${fmtMoney(x.paid_amount)} 📋
+              -${fmtMoney(x.paid_amount)}
             </button>
           ` : `
             <span style="color:var(--text-dim);">-¥0.00</span>
@@ -849,10 +948,10 @@ ADDITIONAL_JS = """
         <td class="num" style="font-weight:800; color:${x.ap_balance > 0 ? 'var(--red)' : 'var(--text)'};">${fmtMoney(x.ap_balance)}</td>
         <td class="num" style="font-weight:600;">${x.ap_share}%</td>
         <td style="white-space:nowrap;">
-          <button class="btn-action" style="color:var(--green); border-color:var(--green-border); font-weight:700;" onclick="openSupplierPaymentModal(${x.id}, '${safeName}', ${x.ap_balance})">💳 登记付款</button>
-          ${x.paid_amount > 0 ? `<button class="btn-action" style="color:var(--amber); border-color:var(--amber-border); font-weight:600;" onclick="openSupplierPaymentHistoryModal('${safeName}')" title="查看所有已付记录，支持修改金额或撤回作废">↩️ 记录/撤回</button>` : ''}
-          <button class="btn-action" onclick="openSupplierModal(${x.id})">编辑</button>
-          <button class="btn-action btn-action-danger" onclick="deleteSupplier(${x.id}, '${safeName}')">删除</button>
+          <button class="btn btn-xs btn-outline-success" onclick="openSupplierPaymentModal(${x.id}, '${safeName}', ${x.ap_balance})">登记付款</button>
+          ${x.paid_amount > 0 ? `<button class="btn btn-xs btn-outline-secondary" onclick="openSupplierPaymentHistoryModal('${safeName}')" title="查看所有已付记录，支持修改金额或撤回作废">付款明细</button>` : ''}
+          <button class="btn btn-xs" onclick="openSupplierModal(${x.id})">编辑</button>
+          <button class="btn btn-xs btn-outline-danger" onclick="deleteSupplier(${x.id}, '${safeName}')">删除</button>
         </td>
       `;
       tbody.appendChild(tr);
@@ -983,15 +1082,14 @@ ADDITIONAL_JS = """
       } else if (isRolledBack) {
         actionHtml = `
           <div style="display:flex; align-items:center; gap:6px; white-space:nowrap;">
-            <span style="color:var(--text-dim); font-size:11.5px;">已撤回</span>
-            <button class="btn btn-sm btn-danger" style="padding:3px 9px; font-size:11.5px;" onclick="deleteBatchRecord(${b.id}, '${safeCode}', true)" title="彻底删除该占位批次记录">🗑️ 删除记录</button>
+            <button class="btn btn-xs btn-outline-danger" onclick="deleteBatchRecord(${b.id}, '${safeCode}', true)" title="彻底删除该占位批次记录">删除记录</button>
           </div>
         `;
       } else {
         actionHtml = `
           <div style="display:flex; align-items:center; gap:6px; white-space:nowrap;">
-            <button class="btn btn-sm" style="padding:3px 9px; font-size:11.5px; color:var(--amber); border-color:var(--amber-border); background:var(--amber-light); font-weight:700;" onclick="rollbackBatch(${b.id})" title="撤回该批次导入的数据，保留批次日志">↩️ 撤回</button>
-            <button class="btn btn-sm btn-danger" style="padding:3px 9px; font-size:11.5px;" onclick="deleteBatchRecord(${b.id}, '${safeCode}', false)" title="撤销该批次数据并直接从列表中彻底删除该批次记录">🗑️ 删除</button>
+            <button class="btn btn-xs btn-outline-warning" onclick="rollbackBatch(${b.id})" title="撤回该批次导入的数据，保留批次日志">撤回</button>
+            <button class="btn btn-xs btn-outline-danger" onclick="deleteBatchRecord(${b.id}, '${safeCode}', false)" title="撤销该批次数据并直接从列表中彻底删除该批次记录">删除</button>
           </div>
         `;
       }
@@ -1001,8 +1099,8 @@ ADDITIONAL_JS = """
         <td><span class="tag tag-blue">${b.parse_mode}</span></td>
         <td>${b.summary || '-'}</td>
         <td class="num">${b.record_count}</td>
-        <td>${isRolledBack ? '<span class="tag tag-red">已撤销回滚</span>' : '<span class="tag tag-green">已入账生效</span>'}</td>
-        <td>${b.created_at}</td>
+        <td>${isRolledBack ? '<span class="status-pill status-danger"><span class="status-dot"></span>已撤销</span>' : '<span class="status-pill status-success"><span class="status-dot"></span>已入账</span>'}</td>
+        <td style="font-size:12px; font-family:monospace;">${b.created_at}</td>
         <td>${actionHtml}</td>
       `;
       tbody.appendChild(tr);
@@ -1012,7 +1110,7 @@ ADDITIONAL_JS = """
   window.deleteBatchRecord = async function(batchId, batchCode, isRolledBack) {
     const confirmMsg = isRolledBack
       ? `确定要将已撤销的批次记录「${batchCode}」从列表中彻底删除吗？`
-      : `⚠️ 确定要彻底【删除】批次「${batchCode}」吗？\n\n该批次目前处于“已入账生效”状态，直接删除将自动回滚清除该批次导入的所有业务流水，并将该批次记录从时光机列表中彻底移除！`;
+      : `确定要彻底删除批次「${batchCode}」吗？\n\n该批次处于“已生效”状态，删除将自动回滚清除该批次导入的所有业务流水，并从记录中彻底移除。`;
     if (!confirm(confirmMsg)) return;
     try {
       const resp = await fetch('/api/batches/delete', {
@@ -1028,7 +1126,7 @@ ADDITIONAL_JS = """
       CURRENT_STATE = data.state;
       renderAll();
       if (typeof showFloatToast === 'function') {
-        showFloatToast(`🗑️ 已彻底删除批次记录「${batchCode}」，台账已实时同步！`, 'amber');
+        showFloatToast(`已彻底删除批次记录「${batchCode}」，台账已实时同步`, 'amber');
       }
     } catch (e) {
       alert('删除批次错误：' + e.message);
@@ -1039,7 +1137,7 @@ ADDITIONAL_JS = """
     const rolledCount = (CURRENT_STATE.batches || []).filter(b => b.source_type !== 'initial_seed' && (b.status === 'rolled_back' || b.record_count <= 0)).length;
     if (rolledCount === 0) {
       if (typeof showFloatToast === 'function') {
-        showFloatToast('✨ 当前列表中没有已撤销或 0 记录的占位批次', 'green');
+        showFloatToast('当前列表中没有已撤销或无记录的占位批次', 'green');
       } else {
         alert('当前列表中没有已撤销或 0 记录的占位批次');
       }
@@ -1060,7 +1158,7 @@ ADDITIONAL_JS = """
       CURRENT_STATE = data.state;
       renderAll();
       if (typeof showFloatToast === 'function') {
-        showFloatToast(`🧹 已成功清理 ${data.result.removed_count} 条无效占位批次记录！`, 'green');
+        showFloatToast(`已成功清理 ${data.result.removed_count} 条无效占位批次记录`, 'green');
       }
     } catch (e) {
       alert('清理请求异常：' + e.message);
@@ -1268,7 +1366,7 @@ ADDITIONAL_JS = """
       const uBubble = document.createElement('div');
       uBubble.className = 'chat-bubble user';
       let previewHtml = `<div style="display:flex; align-items:center; gap:6px; font-weight:700;">
-        <span>${isImage ? '🖼️ 已上传单据图片：' : '📊 已上传业务表格：'}${fname}</span>
+        <span>${isImage ? '已上传单据图像：' : '已上传业务表格：'}${fname}</span>
       </div>`;
       if (userHintText) {
         previewHtml += `<div style="margin-top:4px; font-size:12px; opacity:0.92;">备注说明：${userHintText}</div>`;
@@ -1309,7 +1407,7 @@ ADDITIONAL_JS = """
       bBubble.className = 'chat-bubble bot';
       bBubble.style.maxWidth = '92%';
       bBubble.innerHTML = `<div style="display:flex; align-items:center; gap:8px; color:var(--primary); font-weight:700;">
-        <span>🧠 多模态大模型正在智能识别「${fname}」中的商品、数量、单位与往来账款...</span>
+        <span>多模态视觉引擎正在解析「${fname}」商品、数量、单位与往来明细...</span>
       </div>`;
       listEl.appendChild(bBubble);
       listEl.scrollTop = listEl.scrollHeight;
@@ -1383,7 +1481,7 @@ ADDITIONAL_JS = """
       cardId: cardId,
       filename: res.filename || '上传单据',
       file_type: res.file_type || 'table',
-      mode: res.mode || '🟢 多模态智能识别',
+      mode: res.mode || '多模态智能核验',
       parsed: parsed,
       editableRows: editableRows,
       preview: res.preview || {},
@@ -1433,7 +1531,7 @@ ADDITIONAL_JS = """
     if (dupWarnings.length > 0) {
       dupAlertHtml = `
         <div style="margin-top:8px; padding:8px 10px; background:var(--amber-light); border:1px solid var(--amber-border); border-radius:6px; font-size:11.5px; color:var(--amber);">
-          <div style="font-weight:700; margin-bottom:4px;">⚠️ 检测到 ${dupWarnings.length} 笔单据可能与历史记录存在相同单号：</div>
+          <div style="font-weight:700; margin-bottom:4px; color:var(--amber);">检测到 ${dupWarnings.length} 笔单据可能与历史记录存在相同单号：</div>
           <label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-weight:600; color:var(--text);">
             <input type="checkbox" id="skipDup_${cardId}" ${stateObj.file_type === 'image' ? '' : 'checked'}>
             入账时自动跳过已存在的重复单据（若您希望强制录入新单据，请取消勾选）
@@ -1447,13 +1545,13 @@ ADDITIONAL_JS = """
       <div style="font-size:13px; line-height:1.55;">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid var(--border);">
           <span style="font-weight:800; color:var(--primary); font-size:14px;">
-            ${stateObj.file_type === 'image' ? '📸 多模态单据视觉识别结果' : '📊 业务表格智能解析结果'} · ${stateObj.filename}
+            ${stateObj.file_type === 'image' ? '多模态单据识别结果' : '表格结构化解析结果'} · ${stateObj.filename}
           </span>
           <span class="tag tag-blue" style="font-size:11px;">共 ${rows.length + payments.length + receipts.length} 笔明细</span>
         </div>
 
         <div style="margin-bottom:8px; color:var(--text-muted); font-size:12px;">
-          💡 您可以在下方表格中直接核对或微调<strong>「数量」</strong>与<strong>「单位」</strong>（单位支持下拉选择或自由输入），核对无误后点击下方按钮正式录入系统：
+          请核对下方单据明细，支持微调<strong>数量</strong>与<strong>单位</strong>（单位支持下拉选择或自由输入），核对无误后确认入账：
         </div>
 
         ${rows.length > 0 ? `
@@ -1475,7 +1573,7 @@ ADDITIONAL_JS = """
           </table>
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; padding:4px 8px; background:var(--surface-subtle); border-radius:6px; margin-bottom:8px;">
-          <span>📊 识别汇总：共 <strong>${rows.length}</strong> 项商品明细，合计数量 <strong id="confirmSumQty_${cardId}">${Number(totalQty.toFixed(2))}</strong></span>
+          <span>明细汇总：共 <strong>${rows.length}</strong> 项商品，合计数量 <strong id="confirmSumQty_${cardId}">${Number(totalQty.toFixed(2))}</strong></span>
           <span>合计总金额：<strong style="color:var(--primary); font-size:13.5px;" id="confirmSumAmt_${cardId}">¥${totalAmt.toFixed(2)}</strong></span>
         </div>
         ` : ''}
@@ -1483,12 +1581,12 @@ ADDITIONAL_JS = """
         ${dupAlertHtml}
 
         <div id="confirmActionBox_${cardId}" style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
-          <span style="font-weight:800; color:var(--text); font-size:12.5px;">❓ 是否确认将以上识别结果录入并更新系统数据？</span>
+          <span style="font-weight:700; color:var(--text); font-size:12.5px;">核对无误后，是否确认录入并同步系统台账？</span>
           <div style="display:flex; gap:8px; align-items:center;">
-            <button type="button" class="btn btn-sm" onclick="toggleChatUploadDirection('${cardId}', '${target}')" title="将所有明细一键在【采购入库】与【销售出库】之间切换">🔄 切换采购/销售</button>
-            <button type="button" class="btn btn-sm" onclick="cancelChatUploadCommit('${cardId}')">❌ 取消</button>
+            <button type="button" class="btn btn-xs btn-outline-secondary" onclick="toggleChatUploadDirection('${cardId}', '${target}')">切换采购/销售</button>
+            <button type="button" class="btn btn-xs btn-outline-secondary" onclick="cancelChatUploadCommit('${cardId}')">取消</button>
             <button type="button" class="btn btn-sm btn-primary" style="font-weight:800; padding:6px 14px;" onclick="confirmChatUploadCommit('${cardId}', '${target}')">
-              ✅ 确认录入并更新数据
+              确认录入并同步更新
             </button>
           </div>
         </div>
@@ -1545,7 +1643,7 @@ ADDITIONAL_JS = """
     if (window.LAST_PENDING_UPLOAD_ID === cardId) window.LAST_PENDING_UPLOAD_ID = null;
     const actionBox = document.getElementById('confirmActionBox_' + cardId);
     if (actionBox) {
-      actionBox.innerHTML = `<span style="color:var(--text-dim); font-weight:600;">🚫 已取消本次单据录入（未改动系统账套数据）。</span>`;
+      actionBox.innerHTML = `<span style="color:var(--text-dim); font-weight:600;">已取消本次单据录入（系统账套数据保持不变）。</span>`;
     }
   }
 
@@ -1601,7 +1699,7 @@ ADDITIONAL_JS = """
 
     const actionBox = document.getElementById('confirmActionBox_' + cardId);
     if (actionBox) {
-      actionBox.innerHTML = `<span style="color:var(--primary); font-weight:700;">⚡ 正在将核对后的单据明细原子写入 SQLite 数据库并同步全系统台账...</span>`;
+      actionBox.innerHTML = `<span style="color:var(--primary); font-weight:600;">正在将核对后的单据明细原子写入 SQLite 数据库并同步台账...</span>`;
     }
 
     try {
@@ -1618,7 +1716,7 @@ ADDITIONAL_JS = """
       });
       const data = await resp.json();
       if (!data.ok) {
-        if (actionBox) actionBox.innerHTML = `<span style="color:var(--red); font-weight:700;">✕ 录入失败：${data.error || '未知错误'}</span>`;
+        if (actionBox) actionBox.innerHTML = `<span style="color:var(--red); font-weight:600;">录入失败：${data.error || '未知错误'}</span>`;
         return;
       }
 
@@ -1634,13 +1732,13 @@ ADDITIONAL_JS = """
       if (actionBox) {
         actionBox.innerHTML = `
           <div style="width:100%; padding:8px 12px; background:var(--green-light); border:1px solid var(--green-border); border-radius:8px; color:var(--green); font-weight:700; display:flex; align-items:center; justify-content:space-between;">
-            <span>✅ 已确认录入并同步更新全系统数据！（批次号：<code>${cr.batch_code || '-'}</code> · ${cr.summary || '已生效'}）</span>
+            <span>已确认录入并全量同步账套！（批次号：<code>${cr.batch_code || '-'}</code> · ${cr.summary || '已生效'}）</span>
             <button type="button" class="btn btn-sm" onclick="switchTab('transactions')" style="font-size:11px; padding:2px 8px;">查看流水台账 &gt;</button>
           </div>
         `;
       }
       if (typeof showFloatToast === 'function') {
-        showFloatToast(`✓ 单据已确认录入系统！批次「${cr.batch_code || ''}」已实时生效`, 'green');
+        showFloatToast(`单据已确认录入系统！批次「${cr.batch_code || ''}」已实时生效`, 'green');
       }
     } catch (err) {
       if (actionBox) actionBox.innerHTML = `<span style="color:var(--red);">写入请求异常：${err.message}</span>`;
@@ -1673,7 +1771,7 @@ ADDITIONAL_JS = """
     if (input) input.value = '';
     appendChatBubble(text, 'user');
     const loadingId = 'thinking_' + Date.now();
-    appendChatBubble('🧠 AI 财务总监正在调用大模型全脑思考中...', 'bot', '思考中', loadingId);
+    appendChatBubble('AI 财务总监正在分析账套数据与业务实质...', 'bot', '分析中', loadingId);
 
     try {
       const resp = await fetch('/api/ai/chat', {
@@ -1693,7 +1791,7 @@ ADDITIONAL_JS = """
           }
           appendChatBubble(data.result.reply, 'bot', data.result.mode);
           if (typeof showFloatToast === 'function') {
-            showFloatToast('✓ AI 协同指令已执行并持久化落盘！', 'green');
+            showFloatToast('AI 协同指令已执行并持久化落盘', 'green');
           }
         } else if (data.result.type === 'multimodal_confirmation' || data.result.type === 'bookkeeping_preview') {
           const previewObj = data.result.preview || {};
@@ -1701,7 +1799,7 @@ ADDITIONAL_JS = """
             ok: true,
             filename: previewObj.filename || '自然语言记账指令',
             file_type: 'text_command',
-            mode: data.result.mode || '🟢 AI 财务总监语义记账',
+            mode: data.result.mode || 'AI 语义记账',
             parsed: data.result.parsed || previewObj.parsed || {},
             preview: previewObj,
             reply: data.result.reply || '已提取记账明细，请核对后确认录入：'
@@ -1753,7 +1851,7 @@ ADDITIONAL_JS = """
 
     const bBubble = document.createElement('div');
     bBubble.className = 'chat-bubble bot';
-    bBubble.innerHTML = '<span style="color:var(--text-dim);">✦ AI 正在深度复核账套数据并执行协同操作...</span>';
+    bBubble.innerHTML = '<span style="color:var(--text-dim);">AI 正在复核账套数据并执行协同操作...</span>';
     list.appendChild(bBubble);
     list.scrollTop = list.scrollHeight;
 
@@ -1777,7 +1875,7 @@ ADDITIONAL_JS = """
           ok: true,
           filename: previewObj.filename || '自然语言记账指令',
           file_type: 'text_command',
-          mode: res.mode || '🟢 AI 财务顾问语义记账',
+          mode: res.mode || 'AI 顾问语义记账',
           parsed: res.parsed || previewObj.parsed || {},
           preview: previewObj,
           reply: res.reply || '已提取记账明细，请核对后确认录入：'
@@ -1800,10 +1898,10 @@ ADDITIONAL_JS = """
 
       let badgeHtml = '';
       if (mode) {
-        const isRemote = mode.includes('🟢');
+        const isRemote = Boolean(mode && !mode.includes('本地'));
         badgeHtml = `<div style="margin-top:8px; padding-top:6px; border-top:1px solid rgba(0,0,0,0.06); font-size:11px; display:flex; align-items:center; justify-content:space-between; color:${isRemote ? '#0f766e' : '#b45309'}; font-weight:700;">
           <span>${mode}</span>
-          <span style="font-size:10px; color:var(--text-dim);">⚡ 数据已实时落盘</span>
+          <span style="font-size:10px; color:var(--text-dim);">数据已实时落盘</span>
         </div>`;
       }
 
@@ -1812,7 +1910,7 @@ ADDITIONAL_JS = """
 
       if (res.type === 'action_executed') {
         if (typeof showFloatToast === 'function') {
-          showFloatToast('✓ AI 协同指令已执行并持久化落盘！', 'green');
+          showFloatToast('AI 协同指令已执行并持久化落盘', 'green');
         }
       }
     } catch (err) {
@@ -2079,15 +2177,16 @@ FINAL_HTML = f"""<!DOCTYPE html>
           </div>
 
           <!-- 全局表单排列方式选择器 -->
-          <div class="sort-control-wrap" style="display:inline-flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-pill); padding:6px 12px;" title="全局切换所有台账与流水表单的排列方式">
-            <span style="font-size:12px; font-weight:700; color:var(--text-muted); white-space:nowrap;">🔃 排列：</span>
-            <select id="globalSortSelect" class="table-sort-select" onchange="setSystemSortOrder(this.value)" style="border:none; background:transparent; font-size:12.5px; font-weight:700; color:var(--primary); cursor:pointer; outline:none;">
-              <option value="date_desc">按最新日期往下排 ↓</option>
-              <option value="date_asc">按最早日期往下排 ↑</option>
-              <option value="stock_desc">按库存/数量从多到少 ↓</option>
-              <option value="stock_asc">按库存/数量从少到多 ↑</option>
-              <option value="amount_desc">按金额从高到低 ↓</option>
-              <option value="amount_asc">按金额从低到高 ↑</option>
+          <div class="sort-control-wrap" style="display:inline-flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:4px 10px; box-shadow:var(--shadow-xs);" title="全局切换所有台账与流水表单的排列方式">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-dim); flex-shrink:0;"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/></svg>
+            <span style="font-size:12px; font-weight:600; color:var(--text-muted); white-space:nowrap;">排序</span>
+            <select id="globalSortSelect" class="table-sort-select" onchange="setSystemSortOrder(this.value)" style="border:none; background:transparent; font-size:12px; font-weight:600; color:var(--text); cursor:pointer; outline:none;">
+              <option value="date_desc">按最新日期 ↓</option>
+              <option value="date_asc">按最早日期 ↑</option>
+              <option value="stock_desc">按库存数量 (从多到少) ↓</option>
+              <option value="stock_asc">按库存数量 (从少到多) ↑</option>
+              <option value="amount_desc">按金额大小 (从高到低) ↓</option>
+              <option value="amount_asc">按金额大小 (从低到高) ↑</option>
             </select>
           </div>
 
@@ -2152,14 +2251,14 @@ FINAL_HTML = f"""<!DOCTYPE html>
       <div class="chat-messages" id="drawerChatMessages" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
         <div class="chat-bubble bot">
           您好！我是您的 <strong>极智 AI 财务总监</strong>。<br>
-          您可以点击下方 <strong>「📎 上传」</strong> 发送 Excel 表格或单据照片（支持直接粘贴截图），我将智能识别并在您确认后录入更新数据；或直接输入指令：
+          您可以点击下方 <strong>「上传」</strong> 发送 Excel 表格或单据照片（支持直接粘贴截图），我将智能识别并在您确认后录入更新数据；或直接输入指令：
           • “将零食、坚果、水果类的安全库存统一设为10”
           • “当前哪位供应商的应付欠款最多？”
         </div>
       </div>
       <div style="padding-top:12px; display:flex; gap:6px; align-items:center;">
         <input type="file" id="drawerFileInput" accept=".xlsx,.xls,.csv,.png,.jpg,.jpeg,.webp,.bmp" multiple style="display:none;" onchange="handleChatFileUpload(this.files, 'drawer'); this.value='';">
-        <button type="button" class="btn" onclick="document.getElementById('drawerFileInput').click()" title="上传表格或单据照片（支持直接粘贴截图）" style="padding:0 10px; height:38px; font-weight:700; color:var(--primary); border-color:var(--primary-border); background:var(--primary-light); flex-shrink:0;">📎 上传</button>
+        <button type="button" class="btn" onclick="document.getElementById('drawerFileInput').click()" title="上传表格或单据照片（支持直接粘贴截图）" style="padding:0 10px; height:38px; font-weight:600; color:var(--primary); border-color:var(--border); background:var(--surface); flex-shrink:0;">上传</button>
         <input type="text" id="drawerChatInput" class="form-input" placeholder="输入指令或上传表格/单据图片..." onkeydown="if(event.key==='Enter') sendDrawerChatMessage()">
         <button class="btn btn-primary" onclick="sendDrawerChatMessage()" style="height:38px; flex-shrink:0;">发送</button>
       </div>
