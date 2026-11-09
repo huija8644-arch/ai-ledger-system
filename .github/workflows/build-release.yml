@@ -44,18 +44,19 @@ jobs:
           x86_64-w64-mingw32-gcc -mwindows -O2 -s windows_dist/launcher.c windows_dist/resource.res -o "windows_release/智能进销存台账系统.exe"
           
           # Build Green Portable Zip Package
-          zip -r -q "智能进销存台账系统_绿色免安装版.zip" windows_release -x "*/__pycache__/*" "*/.*"
+          zip -r -q "SmartLedger_Portable.zip" windows_release -x "*/__pycache__/*" "*/.*"
           
           # Build NSIS Setup Installer
           makensis windows_dist/installer.nsi
+          cp "智能进销存台账系统_安装程序_Setup.exe" "SmartLedger_Setup.exe"
 
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         with:
-          tag_name: ${{ github.ref_name || github.event.inputs.version }}
-          name: "极智台账 PRO ${{ github.ref_name || github.event.inputs.version }}"
+          tag_name: ${{ github.event.inputs.version || github.ref_name }}
+          name: "极智台账 PRO ${{ github.event.inputs.version || github.ref_name }}"
           files: |
-            智能进销存台账系统_安装程序_Setup.exe
-            智能进销存台账系统_绿色免安装版.zip
+            SmartLedger_Setup.exe
+            SmartLedger_Portable.zip
           generate_release_notes: true
