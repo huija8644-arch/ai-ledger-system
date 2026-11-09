@@ -33,6 +33,32 @@ tabs_2_7 = tabs_2_7.replace('⚡ 换个角度重新审阅', '<svg width="13" hei
 # 将表格表头中的“规格”统一升级为更直观的“单位”
 tabs_2_7 = tabs_2_7.replace('<th>规格</th>', '<th>单位</th>')
 
+# 确保多次构建 100% 幂等：先剥离可能已存在的独立日期列
+tabs_2_7 = re.sub(r'<th>最新业务日期</th>\s*', '', tabs_2_7)
+tabs_2_7 = re.sub(r'<th>最新交易日期</th>\s*', '', tabs_2_7)
+tabs_2_7 = re.sub(r'<th>最新采购日期</th>\s*', '', tabs_2_7)
+
+# 拆分三大核心台账表头：精准将最新日期从名称列剥离，升级为独立的「最新业务日期 / 最新交易日期 / 最新采购日期」列
+tabs_2_7 = re.sub(
+    r'(<table[^>]*id="inventoryTable"[^>]*>[\s\S]*?<th>产品名称</th>\s*)<th>单位</th>',
+    r'\1<th>最新业务日期</th>\n                <th>单位</th>',
+    tabs_2_7,
+    count=1
+)
+tabs_2_7 = re.sub(
+    r'(<table[^>]*id="arTable"[^>]*>[\s\S]*?<th>客户名称</th>\s*)<th>地址</th>',
+    r'\1<th>最新交易日期</th>\n                <th>地址</th>',
+    tabs_2_7,
+    count=1
+)
+tabs_2_7 = re.sub(
+    r'(<table[^>]*id="apTable"[^>]*>[\s\S]*?<th>供应商名称</th>\s*)<th>地址</th>',
+    r'\1<th>最新采购日期</th>\n                <th>地址</th>',
+    tabs_2_7,
+    count=1
+)
+
+
 # 全面清理 Tab 1 与 Tab 2-7 中的历史 AI 塑料感 (Emoji & 浮夸宣传语)，升级为专业金融级文案与矢量微图标
 de_slop_replacements = [
     ('<span>⚡ AI 经营异常诊断与补货催收建议</span>', '<span style="display:inline-flex; align-items:center; gap:6px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>经营异常诊断与决策建议</span>'),
@@ -843,7 +869,7 @@ ADDITIONAL_JS = """
     tbody.innerHTML = '';
     const invList = sortSystemRecords(CURRENT_STATE.inventory_ledger || [], 'inventory');
     if (invList.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; padding:32px; color:var(--text-dim);">商品库为空，点击右上角「+ 新增商品档案」或上传表格自动建档。</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; padding:32px; color:var(--text-dim);">商品库为空，点击右上角「+ 新增商品档案」或上传表格自动建档。</td></tr>`;
       return;
     }
 
@@ -851,12 +877,11 @@ ADDITIONAL_JS = """
       const tr = document.createElement('tr');
       if (x.is_low_stock) tr.className = 'low-stock';
       const safeProdName = (x.product_name || '').replace(/'/g, "\\\\'");
-      const dateHint = (x.latest_date && x.latest_date !== '0000-00-00')
-        ? `<div style="margin-top:2px;"><span class="cell-sub-date">${x.latest_date}</span></div>`
-        : '';
+      const dateText = (x.latest_date && x.latest_date !== '0000-00-00') ? x.latest_date : '-';
       tr.innerHTML = `
-        <td><strong>${x.product_name}</strong>${dateHint}</td>
-        <td>${x.spec}</td>
+        <td><strong style="color:var(--text);">${x.product_name}</strong></td>
+        <td><span class="cell-sub-date">${dateText}</span></td>
+        <td>${x.spec || '件'}</td>
         <td class="num">${x.opening_qty}</td>
         <td class="num" style="color:var(--primary);">+${x.in_qty}</td>
         <td class="num">${fmtMoney(x.in_price)}</td>
@@ -869,8 +894,8 @@ ADDITIONAL_JS = """
         <td class="num">${x.safety_stock}</td>
         <td>${x.is_low_stock ? '<span class="status-pill status-danger"><span class="status-dot"></span>缺货预警</span>' : '<span class="status-pill status-success"><span class="status-dot"></span>充足</span>'}</td>
         <td>
-          <button class="btn-action" onclick="openProductModal(${x.id})">编辑</button>
-          <button class="btn-action btn-action-danger" onclick="deleteProduct(${x.id}, '${safeProdName}')">删除</button>
+          <button class="btn btn-xs" onclick="openProductModal(${x.id})">编辑</button>
+          <button class="btn btn-xs btn-outline-danger" onclick="deleteProduct(${x.id}, '${safeProdName}')">删除</button>
         </td>
       `;
       tbody.appendChild(tr);
@@ -883,19 +908,18 @@ ADDITIONAL_JS = """
     tbody.innerHTML = '';
     const arList = sortSystemRecords(CURRENT_STATE.ar_ledger || [], 'ar');
     if (arList.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:32px; color:var(--text-dim);">客户档案为空，点击右上角「+ 新增客户档案」录入。</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding:32px; color:var(--text-dim);">客户档案为空，点击右上角「+ 新增客户档案」录入。</td></tr>`;
       return;
     }
 
     arList.forEach(x => {
       const tr = document.createElement('tr');
       const safeCustName = (x.customer_name || '').replace(/'/g, "\\\\'");
-      const dateHint = (x.latest_date && x.latest_date !== '0000-00-00')
-        ? `<div style="margin-top:2px;"><span class="cell-sub-date">${x.latest_date}</span></div>`
-        : '';
+      const dateText = (x.latest_date && x.latest_date !== '0000-00-00') ? x.latest_date : '-';
       tr.innerHTML = `
         <td><span class="tag ${x.rank === 1 ? 'tag-red' : (x.rank === 2 ? 'tag-amber' : 'tag-blue')}">第 ${x.rank} 名</span></td>
-        <td><strong>${x.customer_name}</strong>${dateHint}</td>
+        <td><strong style="color:var(--text);">${x.customer_name}</strong></td>
+        <td><span class="cell-sub-date">${dateText}</span></td>
         <td>${x.address || '-'}</td>
         <td>${x.phone || '-'}</td>
         <td class="num">${fmtMoney(x.opening_ar)}</td>
@@ -904,9 +928,9 @@ ADDITIONAL_JS = """
         <td class="num" style="font-weight:700; color:var(--primary);">${fmtMoney(x.ar_balance)}</td>
         <td class="num" style="font-weight:600;">${x.ar_share}%</td>
         <td>
-          <button class="btn-action" onclick="openCustomerModal(${x.id})">编辑</button>
-          <button class="btn-action btn-action-danger" onclick="deleteCustomer(${x.id}, '${safeCustName}')">删除</button>
-          <button class="btn-action" style="color:var(--teal);" onclick="generateStatement('${safeCustName}')">催款单</button>
+          <button class="btn btn-xs" onclick="openCustomerModal(${x.id})">编辑</button>
+          <button class="btn btn-xs btn-outline-danger" onclick="deleteCustomer(${x.id}, '${safeCustName}')">删除</button>
+          <button class="btn btn-xs btn-outline-secondary" onclick="generateStatement('${safeCustName}')">催款单</button>
         </td>
       `;
       tbody.appendChild(tr);
@@ -920,19 +944,18 @@ ADDITIONAL_JS = """
     tbody.innerHTML = '';
     const apList = sortSystemRecords(CURRENT_STATE.ap_ledger || [], 'ap');
     if (apList.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:32px; color:var(--text-dim);">供应商档案为空，点击右上角「+ 新增供应商档案」录入。</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:32px; color:var(--text-dim);">供应商档案为空，点击右上角「+ 新增供应商档案」录入。</td></tr>`;
       return;
     }
 
     apList.forEach(x => {
       const tr = document.createElement('tr');
       const safeName = (x.supplier_name || '').replace(/'/g, "\'");
-      const dateHint = (x.latest_date && x.latest_date !== '0000-00-00')
-        ? `<div style="margin-top:2px;"><span class="cell-sub-date">${x.latest_date}</span></div>`
-        : '';
+      const dateText = (x.latest_date && x.latest_date !== '0000-00-00') ? x.latest_date : '-';
       tr.innerHTML = `
         <td><span class="tag ${x.rank === 1 ? 'tag-amber' : 'tag-blue'}">第 ${x.rank} 名</span></td>
-        <td><strong>${x.supplier_name}</strong>${dateHint}</td>
+        <td><strong style="color:var(--text);">${x.supplier_name}</strong></td>
+        <td><span class="cell-sub-date">${dateText}</span></td>
         <td>${x.address || '-'}</td>
         <td>${x.phone || '-'}</td>
         <td class="num" style="color:var(--amber); font-weight:600;">${fmtMoney(x.purchase_amount)}</td>
