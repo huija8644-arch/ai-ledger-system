@@ -29,8 +29,8 @@ jobs:
 
       - name: Prepare Windows Distribution
         run: |
-          python3 assemble_flagship_ui.py
           mkdir -p windows_release/python
+          python3 assemble_flagship_ui.py
           curl -sSL -o python-embed.zip https://www.python.org/ftp/python/3.11.9/python-3.11.9-embed-amd64.zip
           unzip -q python-embed.zip -d windows_release/python/
           rm -f python-embed.zip

@@ -4,7 +4,13 @@ import re
 
 print("Building flagship v2.2 with Themes & Full Payment sync...")
 
-with open('/Users/airnipper163.com/Desktop/Antigravity/ai_ledger_system/windows_release/index.html', 'r', encoding='utf-8') as f:
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+src_candidates = [
+    os.path.join(BASE_DIR, "windows_release", "index.html"),
+    os.path.join(BASE_DIR, "index.html")
+]
+src_file = next((p for p in src_candidates if os.path.exists(p)), os.path.join(BASE_DIR, "index.html"))
+with open(src_file, 'r', encoding='utf-8') as f:
     src_html = f.read()
 
 # 提取 Tab 1 内容，并确保去除任何历史追加的多余图表及标记
@@ -205,7 +211,7 @@ if 'supFormAddPayment' not in modals_html:
     modals_html = modals_html.replace('    </div>\n    <div class="modal-footer">\n      <button class="btn" onclick="closeModal(\'supplierModal\')">取消</button>', sup_modal_replacement + '    <div class="modal-footer">\n      <button class="btn" onclick="closeModal(\'supplierModal\')">取消</button>')
 
 # 直接从纯净的 original_main_script.js 读取底层业务代码，避免任何历史追加产生的重复声明污染
-with open('/Users/airnipper163.com/Desktop/Antigravity/ai_ledger_system/original_main_script.js', 'r', encoding='utf-8') as f_orig:
+with open(os.path.join(BASE_DIR, 'original_main_script.js'), 'r', encoding='utf-8') as f_orig:
     main_js = f_orig.read()
 
 # 供应商付款与撤回中心专属模态框
@@ -347,7 +353,7 @@ PAYMENT_MODAL_HTML = """
 full_modals_html = modals_html + "\n" + PAYMENT_MODAL_HTML
 
 # 读取纯正独立的多套主题 CSS
-with open('/Users/airnipper163.com/Desktop/Antigravity/ai_ledger_system/theme_style.css', 'r', encoding='utf-8') as f_theme:
+with open(os.path.join(BASE_DIR, 'theme_style.css'), 'r', encoding='utf-8') as f_theme:
     CSS_THEMES = f_theme.read()
 
 # 增强 JS：修复 postCrud 参数，挂载付款逻辑，增强供应商编辑保存联动
@@ -2172,9 +2178,12 @@ FINAL_HTML = f"""<!DOCTYPE html>
 """
 
 paths = [
-    '/Users/airnipper163.com/Desktop/Antigravity/ai_ledger_system/index.html',
-    '/Users/airnipper163.com/Desktop/Antigravity/ai_ledger_system/windows_release/index.html'
+    os.path.join(BASE_DIR, 'index.html'),
 ]
+release_index = os.path.join(BASE_DIR, 'windows_release', 'index.html')
+if os.path.exists(os.path.dirname(release_index)):
+    paths.append(release_index)
+
 for p in paths:
     with open(p, 'w', encoding='utf-8') as f:
         f.write(FINAL_HTML)
