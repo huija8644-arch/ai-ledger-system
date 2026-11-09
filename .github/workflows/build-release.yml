@@ -1,0 +1,61 @@
+name: Build and Release Windows Packages
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '发布版本号 (例如 v1.0.1)'
+        required: true
+        default: 'v1.0.1'
+
+jobs:
+  build:
+    name: Build Windows Packages on Cloud
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Install Build Tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq nsis mingw-w64 zip curl
+
+      - name: Prepare Windows Distribution
+        run: |
+          python3 assemble_flagship_ui.py
+          mkdir -p windows_release/python
+          curl -sSL -o python-embed.zip https://www.python.org/ftp/python/3.11.9/python-3.11.9-embed-amd64.zip
+          unzip -q python-embed.zip -d windows_release/python/
+          rm -f python-embed.zip
+          
+          # Copy application files
+          cp server.py ai_engine.py database.py index.html start.bat WINDOWS_DEPLOY_GUIDE.md windows_release/
+          cp -r static windows_release/
+          
+          # Compile native Windows launcher
+          x86_64-w64-mingw32-windres windows_dist/resource.rc -O coff -o windows_dist/resource.res
+          x86_64-w64-mingw32-gcc -mwindows -O2 -s windows_dist/launcher.c windows_dist/resource.res -o "windows_release/智能进销存台账系统.exe"
+          
+          # Build Green Portable Zip Package
+          zip -r -q "智能进销存台账系统_绿色免安装版.zip" windows_release -x "*/__pycache__/*" "*/.*"
+          
+          # Build NSIS Setup Installer
+          makensis windows_dist/installer.nsi
+
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        with:
+          tag_name: ${{ github.ref_name || github.event.inputs.version }}
+          name: "极智台账 PRO ${{ github.ref_name || github.event.inputs.version }}"
+          files: |
+            智能进销存台账系统_安装程序_Setup.exe
+            智能进销存台账系统_绿色免安装版.zip
+          generate_release_notes: true
