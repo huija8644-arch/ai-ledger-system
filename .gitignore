@@ -1,0 +1,30 @@
+# SQLite 数据库与事务临时文件（包含本地商贸台账与模型秘钥）
+ledger.db
+ledger.db-wal
+ledger.db-shm
+*.db
+*.sqlite3
+
+# Python 字节码与缓存
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# 操作系统与编辑器临时文件
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
+
+# 编译打包二进制大文件（通过 GitHub Releases 分发，避免撑大 Git 仓库）
+*.exe
+*.zip
+ocr_helper
+
+# Windows 嵌入式运行时解压与打包构建输出目录
+windows_dist/python/
+windows_dist/payload.zip
+windows_dist/python-3.11.9-embed-amd64.zip
+windows_release/
