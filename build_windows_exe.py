@@ -24,13 +24,17 @@ def build():
 
     # PyInstaller 打包指令
     # --onefile: 打包为单文件 exe
-    # --add-data: 将 index.html 打包进 exe 内部
+    # --noconsole / --windowed: 隐藏黑色控制台窗口，呈现独立原生桌面软件
+    # --add-data: 将 index.html 与静态资源打包进 exe 内部
     # --name: 程序名称
     cmd = [
         sys.executable, "-m", "PyInstaller",
         "--onefile",
+        "--noconsole",
+        "--windowed",
         "--name=智能进销存台账系统",
         f"--add-data=index.html{';' if sys.platform == 'win32' else ':'}.",
+        f"--add-data=static{';' if sys.platform == 'win32' else ':'}static",
         "server.py"
     ]
 

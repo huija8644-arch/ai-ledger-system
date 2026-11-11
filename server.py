@@ -18,6 +18,9 @@ import json
 import webbrowser
 import threading
 import urllib.parse
+import socket
+import subprocess
+import shutil
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from database import (
     init_db, get_dashboard_state, get_conn,
@@ -368,22 +371,113 @@ class LedgerRequestHandler(BaseHTTPRequestHandler):
             self._send_json({"ok": True, "state": get_dashboard_state()})
             return
 
+        # 8. 系统安全退出 API (供客户端调用平滑关闭后台服务)
+        if path == "/api/system/exit":
+            self._send_json({"ok": True, "message": "极智台账核心服务已接收关闭指令，正在安全退出..."})
+            def _shutdown():
+                import time
+                time.sleep(0.6)
+                os._exit(0)
+            threading.Thread(target=_shutdown, daemon=True).start()
+            return
+
         self._send_json({"error": "Unknown endpoint"}, 404)
 
     def log_message(self, format, *args):
         pass
 
 
+def open_native_window(url, width=1440, height=900):
+    """优先使用原生独立 App 窗口 (Edge/Chrome --app 或 pywebview)，彻底隐藏地址栏与标签页"""
+    # 1. Windows: 优先调用 Edge / Chrome 原生应用窗口模式
+    if sys.platform == "win32":
+        candidates = [
+            os.path.expandvars(r"%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"),
+            os.path.expandvars(r"%ProgramFiles%\Microsoft\Edge\Application\msedge.exe"),
+            os.path.expandvars(r"%LocalAppData%\Microsoft\Edge\Application\msedge.exe"),
+            os.path.expandvars(r"%ProgramFiles%\Google\Chrome\Application\chrome.exe"),
+            os.path.expandvars(r"%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"),
+            os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe"),
+        ]
+        for exe in candidates:
+            if os.path.isfile(exe):
+                app_data = os.path.expandvars(r"%LocalAppData%\SmartLedger\app_profile")
+                try:
+                    subprocess.Popen([
+                        exe,
+                        f"--app={url}",
+                        f"--window-size={width},{height}",
+                        f"--user-data-dir={app_data}",
+                        "--no-first-run",
+                        "--no-default-browser-check"
+                    ])
+                    return "windows_app"
+                except Exception:
+                    pass
+
+    # 2. macOS: 优先检测 Edge / Chrome 原生 App 模式
+    elif sys.platform == "darwin":
+        for app in ["/Applications/Microsoft Edge.app", "/Applications/Google Chrome.app", "/Applications/Brave Browser.app"]:
+            if os.path.isdir(app):
+                try:
+                    subprocess.Popen([
+                        "open", "-na", app,
+                        "--args",
+                        f"--app={url}",
+                        f"--window-size={width},{height}"
+                    ])
+                    return "mac_app"
+                except Exception:
+                    pass
+
+    # 3. Linux: 优先检测 Chromium 核心
+    elif sys.platform.startswith("linux"):
+        for cmd in ["microsoft-edge", "google-chrome", "chromium-browser", "chromium"]:
+            if shutil.which(cmd):
+                try:
+                    subprocess.Popen([cmd, f"--app={url}", f"--window-size={width},{height}"])
+                    return "linux_app"
+                except Exception:
+                    pass
+
+    # 4. 兜底方案：默认系统浏览器
+    try:
+        webbrowser.open(url)
+        return "browser"
+    except Exception:
+        return "none"
+
+
+def is_port_in_use(port=8765):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('127.0.0.1', port)) == 0
+
+
 def run_server(port=8765):
+    # 如果服务已在运行，直接唤起客户端窗口并退出当前多余进程
+    if is_port_in_use(port):
+        print(f"[*] 检测到端口 {port} 已被占用，正在验证现有极智台账服务...")
+        try:
+            import urllib.request
+            req = urllib.request.Request(f"http://127.0.0.1:{port}/api/state")
+            with urllib.request.urlopen(req, timeout=1.5) as resp:
+                if resp.status == 200:
+                    print(f"[✓] 极智台账服务已在运行 (http://127.0.0.1:{port})，直接唤起专属应用窗口。")
+                    if "--window" in sys.argv or "--app" in sys.argv or getattr(sys, 'frozen', False):
+                        open_native_window(f"http://127.0.0.1:{port}")
+                    sys.exit(0)
+        except Exception:
+            pass
+
     init_db(force_reset=False)
     ThreadingHTTPServer.allow_reuse_address = True
     server = ThreadingHTTPServer(("127.0.0.1", port), LedgerRequestHandler)
-    print(f"AI Ledger Server listening on http://127.0.0.1:{port}")
+    print(f"极智台账核心服务已就绪，正在监听: http://127.0.0.1:{port}")
 
-    # If running as packaged executable, auto-open browser after 0.8s
-    if getattr(sys, 'frozen', False):
+    # 若为打包单文件 EXE 或显式指定窗口参数，自动唤起独立应用窗口
+    if getattr(sys, 'frozen', False) or "--window" in sys.argv or "--app" in sys.argv:
         def _open():
-            webbrowser.open(f"http://127.0.0.1:{port}")
+            open_native_window(f"http://127.0.0.1:{port}")
         threading.Timer(0.8, _open).start()
 
     server.serve_forever()

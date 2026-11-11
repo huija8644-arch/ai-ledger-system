@@ -50,14 +50,43 @@ start /b "" "%PY_CMD%" server.py
 :: 等待 1 秒确保服务启动
 timeout /t 1 /nobreak >nul
 
-echo [✓] 服务启动成功！正在自动为您打开默认浏览器...
+echo [✓] 核心服务启动成功！正在唤起极智台账专属独立桌面窗口...
+
+:: 优先以原生独立应用窗口模式启动 (Edge / Chrome --app，无地址栏/无标签页)
+if exist "%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe" (
+    start "" "%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe" --app="http://127.0.0.1:8765" --window-size=1440,900 --user-data-dir="%LOCALAPPDATA%\SmartLedger\app_profile" --no-first-run --no-default-browser-check
+    goto APP_STARTED
+)
+if exist "%ProgramFiles%\Microsoft\Edge\Application\msedge.exe" (
+    start "" "%ProgramFiles%\Microsoft\Edge\Application\msedge.exe" --app="http://127.0.0.1:8765" --window-size=1440,900 --user-data-dir="%LOCALAPPDATA%\SmartLedger\app_profile" --no-first-run --no-default-browser-check
+    goto APP_STARTED
+)
+if exist "%LocalAppData%\Microsoft\Edge\Application\msedge.exe" (
+    start "" "%LocalAppData%\Microsoft\Edge\Application\msedge.exe" --app="http://127.0.0.1:8765" --window-size=1440,900 --user-data-dir="%LOCALAPPDATA%\SmartLedger\app_profile" --no-first-run --no-default-browser-check
+    goto APP_STARTED
+)
+if exist "%ProgramFiles%\Google\Chrome\Application\chrome.exe" (
+    start "" "%ProgramFiles%\Google\Chrome\Application\chrome.exe" --app="http://127.0.0.1:8765" --window-size=1440,900 --user-data-dir="%LOCALAPPDATA%\SmartLedger\app_profile" --no-first-run --no-default-browser-check
+    goto APP_STARTED
+)
+if exist "%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe" (
+    start "" "%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe" --app="http://127.0.0.1:8765" --window-size=1440,900 --user-data-dir="%LOCALAPPDATA%\SmartLedger\app_profile" --no-first-run --no-default-browser-check
+    goto APP_STARTED
+)
+if exist "%LocalAppData%\Google\Chrome\Application\chrome.exe" (
+    start "" "%LocalAppData%\Google\Chrome\Application\chrome.exe" --app="http://127.0.0.1:8765" --window-size=1440,900 --user-data-dir="%LOCALAPPDATA%\SmartLedger\app_profile" --no-first-run --no-default-browser-check
+    goto APP_STARTED
+)
+
+:: 兜底方案：默认系统浏览器
 start http://127.0.0.1:8765
 
+:APP_STARTED
 echo.
 echo ========================================================
-echo   系统已就绪！您可以直接在浏览器中进行日常台账操作。
-echo   【提示】请保持此黑框窗口在后台最小化运行；
-echo   若需关闭系统，直接关闭此窗口即可。
+echo   极智台账 PRO 原生独立客户端已成功运行！
+echo   【提示】请保持此后台服务窗口最小化运行；
+echo   关闭此窗口或按任意键即可退出整个系统。
 echo ========================================================
 echo.
 pause >nul

@@ -27,15 +27,32 @@ SERVER_PID=$!
 
 sleep 1.5
 
-# 自动在默认浏览器中打开
+# 自动唤起专属独立 App 桌面窗口
 URL="http://127.0.0.1:$PORT"
-echo "✓ 后端服务启动成功 (PID: $SERVER_PID)"
-echo "✓ 系统访问地址：$URL"
+echo "✓ 后端核心服务启动成功 (PID: $SERVER_PID)"
+echo "✓ 系统服务地址：$URL"
+echo "✓ 正在唤起独立原生应用窗口..."
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    open "$URL"
+    if [ -d "/Applications/Microsoft Edge.app" ]; then
+        open -na "Microsoft Edge" --args --app="$URL" --window-size=1440,900
+    elif [ -d "/Applications/Google Chrome.app" ]; then
+        open -na "Google Chrome" --args --app="$URL" --window-size=1440,900
+    elif [ -d "/Applications/Brave Browser.app" ]; then
+        open -na "Brave Browser" --args --app="$URL" --window-size=1440,900
+    else
+        open "$URL"
+    fi
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    xdg-open "$URL" 2>/dev/null || true
+    if command -v microsoft-edge &> /dev/null; then
+        microsoft-edge --app="$URL" --window-size=1440,900 &
+    elif command -v google-chrome &> /dev/null; then
+        google-chrome --app="$URL" --window-size=1440,900 &
+    elif command -v chromium-browser &> /dev/null; then
+        chromium-browser --app="$URL" --window-size=1440,900 &
+    else
+        xdg-open "$URL" 2>/dev/null || true
+    fi
 fi
 
 echo "系统正在运行中。按 Ctrl+C 可停止服务。"

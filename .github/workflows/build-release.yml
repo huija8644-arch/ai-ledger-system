@@ -39,9 +39,9 @@ jobs:
           cp server.py ai_engine.py database.py index.html start.bat WINDOWS_DEPLOY_GUIDE.md windows_release/
           cp -r static windows_release/
           
-          # Compile native Windows launcher
+          # Compile native Windows launcher (with independent App Window engine)
           x86_64-w64-mingw32-windres windows_dist/resource.rc -O coff -o windows_dist/resource.res
-          x86_64-w64-mingw32-gcc -mwindows -O2 -s windows_dist/launcher.c windows_dist/resource.res -o "windows_release/智能进销存台账系统.exe"
+          x86_64-w64-mingw32-gcc -mwindows -O2 -s windows_dist/launcher.c windows_dist/resource.res -ladvapi32 -lshell32 -luser32 -lkernel32 -o "windows_release/智能进销存台账系统.exe"
           
           # Build Green Portable Zip Package
           zip -r -q "SmartLedger_Portable.zip" windows_release -x "*/__pycache__/*" "*/.*"
